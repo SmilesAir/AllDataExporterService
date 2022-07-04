@@ -1,0 +1,13 @@
+{
+  "name": "all-data-exporter-service",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "deploy": "npm i && sls deploy",
+    "deploy:production": "npm i && sls deploy --stage production"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.38.0",
+    "node-fetch": "^2.6.1"
+  }
+}

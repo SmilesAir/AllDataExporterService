@@ -8,7 +8,8 @@ provider:
   stage: ${opt:stage, "development"}
 
   environment:
-    TEST_TABLE: ${self:service}-${self:provider.stage}-testTable
+    CACHE_TABLE: ${self:service}-${self:provider.stage}-cacheTable
+    CACHE_BUCKET: ${self:service}-${self:provider.stage}-cache-bucket
 
   iamRoleStatements:
     - Effect: Allow
@@ -16,32 +17,45 @@ provider:
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TEST_TABLE}"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CACHE_TABLE}"
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: "arn:aws:s3:::${self:provider.environment.CACHE_BUCKET}/*"
 
 functions:
-  testLambda:
-    handler: source/test.handler
+  getExportedData:
+    handler: source/main.getExportedData
     events:
       - http:
-          path: handler
-          method: post
+          path: getExportedData
+          method: get
+          cors: true
+  getExportedDataList:
+    handler: source/main.getExportedDataList
+    events:
+      - http:
+          path: getExportedDataList
+          method: get
           cors: true
 
 resources:
   Resources:
-    testTable:
+    cacheTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.TEST_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.CACHE_TABLE}
         AttributeDefinitions:
           - AttributeName: key
             AttributeType: S
         KeySchema:
           - AttributeName: key
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+    cacheBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+        BucketName: ${self:provider.environment.CACHE_BUCKET}
 
