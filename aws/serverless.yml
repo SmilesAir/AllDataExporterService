@@ -7,29 +7,12 @@ provider:
   region: us-west-2
   stage: ${opt:stage, "development"}
 
-  environment:
-    CACHE_TABLE: ${self:service}-${self:provider.stage}-cacheTable
-    CACHE_BUCKET: ${self:service}-${self:provider.stage}-cache-bucket
-
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CACHE_TABLE}"
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-        - s3:GetObject
-      Resource: "arn:aws:s3:::${self:provider.environment.CACHE_BUCKET}/*"
-
 functions:
   getExportedData:
     handler: source/main.getExportedData
     events:
       - http:
-          path: getExportedData
+          path: getExportedData/{stage}
           method: get
           cors: true
   getExportedDataList:
@@ -40,22 +23,11 @@ functions:
           method: get
           cors: true
 
-resources:
-  Resources:
-    cacheTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.CACHE_TABLE}
-        AttributeDefinitions:
-          - AttributeName: key
-            AttributeType: S
-        KeySchema:
-          - AttributeName: key
-            KeyType: HASH
-    cacheBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        AccessControl: Private
-        BucketName: ${self:provider.environment.CACHE_BUCKET}
+plugins:
+  - fullstack-serverless
 
+custom:
+  fullstack:
+    bucketName: deployed-bucket
+    distributionFolder: ../client/builds/web
+    indexDocument: index.html

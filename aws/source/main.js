@@ -3,12 +3,26 @@ const fetch = require("node-fetch")
 const Common = require("./common.js")
 
 module.exports.getExportedData = (e, c, cb) => { Common.handler(e, c, cb, async (event, context) => {
+    let isDev = decodeURIComponent(event.pathParameters.stage) === "development"
+
+    let urls = []
+    if (isDev) {
+        urls.push("https://tkhmiv70u9.execute-api.us-west-2.amazonaws.com/development/getAllPlayers")
+        urls.push("https://xyf6qhiwi1.execute-api.us-west-2.amazonaws.com/development/getAllEvents")
+        urls.push("https://pkbxpw400j.execute-api.us-west-2.amazonaws.com/development/getAllResults")
+        urls.push("https://k7p1y5ntz6.execute-api.us-west-2.amazonaws.com/development/downloadLatestPointsData")
+    } else {
+        urls.push("https://4wnda3jb78.execute-api.us-west-2.amazonaws.com/production/getAllPlayers")
+        urls.push("https://wyach4oti8.execute-api.us-west-2.amazonaws.com/production/getAllEvents")
+        urls.push("https://v869a98rf9.execute-api.us-west-2.amazonaws.com/production/getAllResults")
+        urls.push("https://kvq5a3et4b.execute-api.us-west-2.amazonaws.com/production/downloadLatestPointsData")
+    }
+
     let data = {
         exportTime: Date.now
     }
     let promises = []
-
-    promises.push(fetch("https://tkhmiv70u9.execute-api.us-west-2.amazonaws.com/development/getAllPlayers", {
+    promises.push(fetch(urls[0], {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -19,7 +33,7 @@ module.exports.getExportedData = (e, c, cb) => { Common.handler(e, c, cb, async 
         throw "getAllPlayers error: " + error
     }))
 
-    promises.push(fetch("https://xyf6qhiwi1.execute-api.us-west-2.amazonaws.com/development/getAllEvents", {
+    promises.push(fetch(urls[1], {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -30,7 +44,7 @@ module.exports.getExportedData = (e, c, cb) => { Common.handler(e, c, cb, async 
         throw "getAllEvents error: " + error
     }))
 
-    promises.push(fetch("https://pkbxpw400j.execute-api.us-west-2.amazonaws.com/development/getAllResults", {
+    promises.push(fetch(urls[2], {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -41,7 +55,7 @@ module.exports.getExportedData = (e, c, cb) => { Common.handler(e, c, cb, async 
         throw "getAllResults error: " + error
     }))
 
-    promises.push(fetch("https://k7p1y5ntz6.execute-api.us-west-2.amazonaws.com/development/downloadLatestPointsData", {
+    promises.push(fetch(urls[3], {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
